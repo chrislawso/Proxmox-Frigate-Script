@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+
+echo "Starting script..."
+
 source <(curl -s https://raw.githubusercontent.com/mercuryin/Proxmox-Frigate-Script/main/build.func)
-# Copyright (c) 2021-2024 tteck
-# Authors: tteck (tteckster)
-# License: MIT
-# https://github.com/tteck/Proxmox/raw/main/LICENSE
+
+echo "Loaded functions..."
 
 function header_info {
   clear
@@ -25,9 +26,15 @@ var_cpu="4"
 var_ram="4096"
 var_os="debian"
 var_version="11"
+
 variables
+echo "Variables set..."
+
 color
+echo "Color set..."
+
 catch_errors
+echo "Error handling set..."
 
 function default_settings() {
   CT_TYPE="0"
@@ -60,8 +67,13 @@ function update_script() {
 }
 
 start
+echo "Start called..."
+
 build_container
+echo "Build container called..."
+
 description
+echo "Description called..."
 
 msg_info "Setting Container to Normal Resources"
 pct set $CTID -memory 1024
