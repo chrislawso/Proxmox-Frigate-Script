@@ -46,20 +46,35 @@ if [[ "$CTTYPE" == "0" ]]; then
 fi
 msg_ok "Set Up Hardware Acceleration"
 
-msg_ok "Stop spinner to prevent segmentation fault"
 msg_info "Installing Frigate v0.14.0-beta2 (Perseverance)"
 if [ -n "$SPINNER_PID" ] && ps -p $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
-cd ~
-mkdir -p /opt/frigate/models
-wget -q https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-beta2.tar.gz -O frigate.tar.gz
-tar -xzf frigate.tar.gz -C /opt/frigate --strip-components 1
+
+# Directorio de trabajo
+cd ~ || { msg_error "Failed to change directory"; exit 1; }
+
+# Crear directorio de modelos
+mkdir -p /opt/frigate/models || { msg_error "Failed to create directory"; exit 1; }
+
+# Descargar Frigate v0.14.0-beta2
+wget -q https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-beta2.tar.gz -O frigate.tar.gz || { msg_error "Failed to download Frigate"; exit 1; }
+msg_ok "Downloaded Frigate v0.14.0-beta2"
+
+# Extraer Frigate
+tar -xzf frigate.tar.gz -C /opt/frigate --strip-components 1 || { msg_error "Failed to extract Frigate"; exit 1; }
 rm -rf frigate.tar.gz
-cd /opt/frigate
-$STD pip3 wheel --wheel-dir=/wheels -r /opt/frigate/docker/main/requirements-wheels.txt
-cp -a /opt/frigate/docker/main/rootfs/. /
+msg_ok "Extracted Frigate v0.14.0-beta2"
+
+# Instalar dependencias de Python
+cd /opt/frigate || { msg_error "Failed to change directory to /opt/frigate"; exit 1; }
+$STD pip3 wheel --wheel-dir=/wheels -r /opt/frigate/docker/main/requirements-wheels.txt || { msg_error "Failed to build Python wheels"; exit 1; }
+cp -a /opt/frigate/docker/main/rootfs/. / || { msg_error "Failed to copy root filesystem"; exit 1; }
+
+# Establecer arquitectura de destino
 export TARGETARCH="amd64"
 echo 'libc6 libraries/restart-without-asking boolean true' | debconf-set-selections
-$STD /opt/frigate/docker/main/install_deps.sh
+
+# Instalar dependencias adicionales
+$STD /opt/frigate/docker/main/install_deps.sh || { msg_error "Failed to install dependencies"; exit 1; }
 $STD ln -svf /usr/lib/btbn-ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg
 $STD ln -svf /usr/lib/btbn-ffmpeg/bin/ffprobe /usr/local/bin/ffprobe
 $STD pip3 install -U /wheels/*.whl
