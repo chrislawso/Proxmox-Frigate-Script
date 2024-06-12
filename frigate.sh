@@ -17,24 +17,18 @@ function header_info {
 
 EOF
 }
-
 header_info
 echo -e "Loading..."
-
-# Definir variables de configuración
 APP="Frigate"
 var_disk="20"
 var_cpu="4"
 var_ram="4096"
 var_os="debian"
 var_version="11"
-
-# Llamar a las funciones definidas en build.func
 variables
 color
 catch_errors
 
-# Definir la función para los valores predeterminados
 function default_settings() {
   CT_TYPE="0"
   PW=""
@@ -68,6 +62,31 @@ function update_script() {
   exit 1
 }
 
+# Definir la función para la instalación
+function install_script() {
+  pve_check
+  shell_check
+  root_check
+  arch_check
+  ssh_check
+
+  if systemctl is-active -q ping-instances.service; then
+    systemctl -q stop ping-instances.service
+  fi
+  NEXTID=$(pvesh get /cluster/nextid)
+  timezone=$(cat /etc/timezone)
+  header_info
+  if (whiptail --backtitle "Proxmox VE Helper Scripts" --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
+    header_info
+    echo -e "${BL}Using Default Settings${CL}"
+    default_settings
+  else
+    header_info
+    echo -e "${RD}Using Advanced Settings${CL}"
+    advanced_settings
+  fi
+}
+
 # Función para iniciar la instalación
 function start() {
   if command -v pveversion >/dev/null 2>&1; then
@@ -88,6 +107,28 @@ function start() {
     fi
     SPINNER_PID=""
     update_script
+  fi
+}
+
+# Función para construir el contenedor
+function build_container() {
+  # Código para construir el contenedor
+  msg_info "Building container"
+  # Aquí debe estar el código que construye el contenedor
+  msg_ok "Container built"
+}
+
+# Función para la descripción del contenedor
+function description() {
+  IP=$(pct exec "$CTID" ip a s dev eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
+  pct set "$CTID" -description "<div align='center'><a href='https://Helper-Scripts.com' target='_blank' rel='noopener noreferrer'><img src='https://raw.githubusercontent.com/tteck/Proxmox/main/misc/images/logo-81x112.png'/></a>
+
+  # ${APP} LXC
+
+  <a href='https://ko-fi.com/D1D7EP4GF'><img src='https://img.shields.io/badge/&#x2615;-Buy me a coffee-blue' /></a>
+  </div>"
+  if [[ -f /etc/systemd/system/ping-instances.service ]]; then
+    systemctl start ping-instances.service
   fi
 }
 
