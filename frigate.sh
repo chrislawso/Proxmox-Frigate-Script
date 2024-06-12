@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source <(curl -s https://raw.githubusercontent.com/mercuryin/Proxmox-Frigate-Script/main/build.func)
+source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
 # Copyright (c) 2021-2024 tteck
 # Authors: tteck (tteckster)
 # License: MIT
@@ -62,17 +62,6 @@ function update_script() {
 start
 build_container
 description
-
-# Añadir la línea para descargar y descomprimir la versión beta de Frigate
-msg_info "Downloading and installing Frigate beta"
-cd /opt
-wget https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-beta2.zip
-unzip v0.14.0-beta2.zip
-cd frigate-0.14.0-beta2
-
-# Instalar Frigate beta
-pip install -r requirements.txt
-python3 setup.py install
 
 msg_info "Setting Container to Normal Resources"
 pct set $CTID -memory 1024
