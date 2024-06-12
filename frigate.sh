@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/mercuryin/Proxmox-Frigate-Script/main/build.func)
-
 # Copyright (c) 2021-2024 tteck
 # Authors: tteck (tteckster)
 # License: MIT
@@ -18,18 +17,24 @@ function header_info {
 
 EOF
 }
+
 header_info
 echo -e "Loading..."
+
+# Definir variables de configuración
 APP="Frigate"
 var_disk="20"
 var_cpu="4"
 var_ram="4096"
 var_os="debian"
 var_version="11"
+
+# Llamar a las funciones definidas en build.func
 variables
 color
 catch_errors
 
+# Definir la función para los valores predeterminados
 function default_settings() {
   CT_TYPE="0"
   PW=""
@@ -55,11 +60,38 @@ function default_settings() {
 }
 
 function update_script() {
-  if [[ ! -f /etc/systemd/system/frigate.service ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
+  if [[ ! -f /etc/systemd/system/frigate.service ]]; then 
+    msg_error "No ${APP} Installation Found!"
+    exit 1
+  fi
   msg_error "There is currently no update path available."
-  exit  
+  exit 1
 }
 
+# Función para iniciar la instalación
+function start() {
+  if command -v pveversion >/dev/null 2>&1; then
+    if ! (whiptail --backtitle "Proxmox VE Helper Scripts" --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
+      clear
+      echo -e "⚠  User exited script \n"
+      exit 1
+    fi
+    SPINNER_PID=""
+    install_script
+  fi
+
+  if ! command -v pveversion >/dev/null 2>&1; then
+    if ! (whiptail --backtitle "Proxmox VE Helper Scripts" --title "${APP} LXC UPDATE" --yesno "Support/Update functions for ${APP} LXC. Proceed?" 10 58); then
+      clear
+      echo -e "⚠  User exited script \n"
+      exit 1
+    fi
+    SPINNER_PID=""
+    update_script
+  fi
+}
+
+# Iniciar el script
 start
 build_container
 description
