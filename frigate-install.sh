@@ -14,8 +14,6 @@ network_check
 update_os
 
 msg_info "Installing Dependencies (Patience)"
-$STD apt-get update
-$STD apt-get upgrade
 $STD apt-get install -y {curl,sudo,mc,git,gpg,automake,build-essential,xz-utils,libtool,ccache,pkg-config,libgtk-3-dev,libavcodec-dev,libavformat-dev,libswscale-dev,libv4l-dev,libxvidcore-dev,libx264-dev,libjpeg-dev,libpng-dev,libtiff-dev,gfortran,openexr,libatlas-base-dev,libssl-dev,libtbb2,libtbb-dev,libdc1394-22-dev,libopenexr-dev,libgstreamer-plugins-base1.0-dev,libgstreamer1.0-dev,gcc,gfortran,libopenblas-dev,liblapack-dev,libusb-1.0-0-dev,jq}
 msg_ok "Installed Dependencies"
 
@@ -48,35 +46,22 @@ if [[ "$CTTYPE" == "0" ]]; then
 fi
 msg_ok "Set Up Hardware Acceleration"
 
-msg_info "Installing Frigate v0.14.0-beta2 (Perseverance)"
+RELEASE=$(curl -s https://api.github.com/repos/blakeblackshear/frigate/releases/latest | jq -r '.tag_name')
+msg_ok "Stop spinner to prevent segmentation fault"
+msg_info "Installing Frigate $RELEASE (Perseverance)"
 if [ -n "$SPINNER_PID" ] && ps -p $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
-
-# Directorio de trabajo
-cd ~ || { msg_error "Failed to change directory"; exit 1; }
-
-# Crear directorio de modelos
-mkdir -p /opt/frigate/models || { msg_error "Failed to create directory"; exit 1; }
-
-# Descargar Frigate v0.14.0-beta2
-wget -q https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-rc2.tar.gz -O frigate.tar.gz || { msg_error "Failed to download Frigate"; exit 1; }
-msg_ok "Downloaded Frigate v0.14.0-beta2"
-
-# Extraer Frigate
-tar -xzf frigate.tar.gz -C /opt/frigate --strip-components 1 || { msg_error "Failed to extract Frigate"; exit 1; }
+cd ~
+mkdir -p /opt/frigate/models
+wget -q https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-rc2.tar.gz -O frigate.tar.gz
+tar -xzf frigate.tar.gz -C /opt/frigate --strip-components 1
 rm -rf frigate.tar.gz
-msg_ok "Extracted Frigate v0.14.0-beta2"
-
-# Instalar dependencias de Python
-cd /opt/frigate || { msg_error "Failed to change directory to /opt/frigate"; exit 1; }
-$STD pip3 wheel --wheel-dir=/wheels -r /opt/frigate/docker/main/requirements-wheels.txt || { msg_error "Failed to build Python wheels"; exit 1; }
-cp -a /opt/frigate/docker/main/rootfs/. / || { msg_error "Failed to copy root filesystem"; exit 1; }
-
-# Establecer arquitectura de destino
+cd /opt/frigate
+$STD pip3 wheel --wheel-dir=/wheels -r /opt/frigate/docker/main/requirements-wheels.txt
+cp -a /opt/frigate/docker/main/rootfs/. /
 export TARGETARCH="amd64"
 echo 'libc6 libraries/restart-without-asking boolean true' | debconf-set-selections
-
-# Instalar dependencias adicionales
-$STD /opt/frigate/docker/main/install_deps.sh || { msg_error "Failed to install dependencies"; exit 1; }
+wget -q -O /opt/frigate/docker/main/install_deps.sh https://raw.githubusercontent.com/blakeblackshear/frigate/dev/docker/main/install_deps.sh
+$STD /opt/frigate/docker/main/install_deps.sh
 $STD ln -svf /usr/lib/btbn-ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg
 $STD ln -svf /usr/lib/btbn-ffmpeg/bin/ffprobe /usr/local/bin/ffprobe
 $STD pip3 install -U /wheels/*.whl
@@ -115,7 +100,7 @@ else
   sed -i -e 's/^kvm:x:104:$/render:x:104:frigate/' -e 's/^render:x:105:$/kvm:x:105:/' /etc/group
 fi
 echo "tmpfs   /tmp/cache      tmpfs   defaults        0       0" >> /etc/fstab
-msg_ok "Installed Frigate v0.14.0-beta2"
+msg_ok "Installed Frigate $RELEASE"
 
 if grep -q -o -m1 'avx[^ ]*' /proc/cpuinfo; then
   msg_ok "AVX Support Detected"
@@ -179,7 +164,7 @@ mv 1.tflite cpu_audio_model.tflite
 cp /opt/frigate/audio-labelmap.txt /audio-labelmap.txt
 mkdir -p /media/frigate
 wget -qO /media/frigate/person-bicycle-car-detection.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4
-msg_ok "Installed Coral Object Detection Model
+msg_ok "Installed Coral Object Detection Model"
 
 msg_info "Building Nginx with Custom Modules"
 $STD /opt/frigate/docker/main/build_nginx.sh
