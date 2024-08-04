@@ -56,7 +56,7 @@ cd ~ || { msg_error "Failed to change directory"; exit 1; }
 mkdir -p /opt/frigate/models || { msg_error "Failed to create directory"; exit 1; }
 
 # Descargar Frigate v0.14.0-beta2
-wget -q https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-beta2.tar.gz -O frigate.tar.gz || { msg_error "Failed to download Frigate"; exit 1; }
+wget -q https://github.com/blakeblackshear/frigate/archive/refs/tags/v0.14.0-rc2.tar.gz -O frigate.tar.gz || { msg_error "Failed to download Frigate"; exit 1; }
 msg_ok "Downloaded Frigate v0.14.0-beta2"
 
 # Extraer Frigate
