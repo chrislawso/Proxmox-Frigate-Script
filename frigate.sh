@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source <(curl -s https://raw.githubusercontent.com/mercuryin/Proxmox-Frigate-Script/main/build.func) || { echo "Failed to load build.func"; exit 1; }
+source <(curl -s https://raw.githubusercontent.com/chrislawso/Proxmox-Frigate-Script/main/build.func) || { echo "Failed to load build.func"; exit 1; }
 # Copyright (c) 2021-2024 tteck
 # Authors: tteck (tteckster)
 # License: MIT
